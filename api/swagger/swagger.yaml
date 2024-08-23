@@ -24,6 +24,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProductResponse'
+
 components:
   schemas:
     ProductRequest:
