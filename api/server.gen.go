@@ -20,15 +20,20 @@ import (
 	strictgin "github.com/oapi-codegen/runtime/strictmiddleware/gin"
 )
 
-// Product defines model for Product.
-type Product struct {
+// ProductRequest defines model for ProductRequest.
+type ProductRequest struct {
 	Id    *int64  `json:"id,omitempty"`
 	Name  string  `json:"name"`
 	Price float32 `json:"price"`
 }
 
+// ProductResponse defines model for ProductResponse.
+type ProductResponse struct {
+	Id *int64 `json:"id,omitempty"`
+}
+
 // CreateProductJSONRequestBody defines body for CreateProduct for application/json ContentType.
-type CreateProductJSONRequestBody = Product
+type CreateProductJSONRequestBody = ProductRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -97,7 +102,7 @@ type CreateProductResponseObject interface {
 	VisitCreateProductResponse(w http.ResponseWriter) error
 }
 
-type CreateProduct201JSONResponse Product
+type CreateProduct201JSONResponse ProductResponse
 
 func (response CreateProduct201JSONResponse) VisitCreateProductResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -161,13 +166,13 @@ func (sh *strictHandler) CreateProduct(ctx *gin.Context) {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/7xRwW4UMQz9lZHhOGpmAaEqN+BUCYneqx7SxNtNNRMbx1O0Ws2/I2dmlsIHcIksP/vF",
-	"770LRJqYChat4C9Q4wmn0Mp7oTRHtZKFGEUzNiAne48kU1DwkIt+/gQ9CIb0o4xn8Coz9qBnxhXGZxRY",
-	"eihhQlvdkKqSy7MBLDniX6THkYLClaTM05NxLPbNzzkLJvAPK+G+/nidpqcXjAqLjedypPZn1tGwTVX3",
-	"5f4OenhFqZkKeDjcDDeD3UKMJXAGDx9bqwcOemrCXeDsXg+OV47WY6rNIjMoaKZyl8DDN8GguDu4Ho1V",
-	"v1I623CkoljaXmAec2yb7qXaKXsIVr0XPIKHd+5PSm6LyO3sTWbCGiWzrmJ2kUpdbJfAW98snmZkZSp1",
-	"zfTDcPgfh62+pBZknacpyPna7UJX8FfHb7crikUE/uHyD9N3imE8mfk9zDKCh5Mqe+fGHfC3w+2wRQbL",
-	"4/I7AAD//6APEQfrAgAA",
+	"H4sIAAAAAAAC/6xSwW7UMBD9lWjgGNVZQKjyDThVQqLiWvXg2rNdV4nHHU+KVqv8Oxo7G6D0uJcomud5",
+	"8968OYGnKVPCJAXsCYo/4OTq7y1TmL38xOcZi2glM2VkiVjxGPS7J56cgIWY5PMn6IHRhR9pPIIVnrEH",
+	"OWZsMD4iw9JDchNq64oU4ZgeFcgcPf5Duh/JCWwkaZ4elGPRMc9zZAxg7xrhuf1+e00PT+hFiTcrJVMq",
+	"eDEvy3+ztBTTnqq/KKNi6/Tuy+0N9PCCXCIlsLC7Gq4GlUcZk8sRLHyspR6yk0MVZlyO5mVncuOotUwt",
+	"DjXgJFK6CWDhG6MTXGdBWxAW+UrhqI89JcFU+1zOY/S10zwVlXLOXf/eM+7Bwjvz5zDMehXm1UlUtwGL",
+	"55ileTp7Fep8FQR/R6VbrNm1HKqbD8Pu8vrWnN8Q2NYUanZlnibHx63auS7hr27ddesuyJoY2LvTK6bv",
+	"5N140Cx6mHkECweRbI0Zz4C9Hq4HWO6X3wEAAP//H6X4rGYDAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

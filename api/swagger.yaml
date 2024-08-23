@@ -16,17 +16,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Product'
+              $ref: '#/components/schemas/ProductRequest'
       responses:
         '201':
           description: Created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Product'
+                $ref: '#/components/schemas/ProductResponse'
 components:
   schemas:
-    Product:
+    ProductRequest:
       type: object
       properties:
         id:
@@ -41,3 +41,11 @@ components:
       required:
         - name
         - price
+
+    ProductResponse:
+        type: object
+        properties:
+          id:
+            type: integer
+            format: int64
+            readOnly: true

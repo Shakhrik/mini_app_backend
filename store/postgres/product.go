@@ -1,4 +1,4 @@
-package store
+package postgres
 
 import (
 	"sync"
@@ -10,7 +10,15 @@ var products = make(map[int64]dto.Product)
 var productIDCounter int64 = 1
 var mu sync.Mutex
 
-func SaveProduct(product dto.Product) (dto.Product, error) {
+type productRepo struct {
+	db string
+}
+
+func newProductRepo(db string) *productRepo {
+	return &productRepo{db: db}
+}
+
+func (p *productRepo) CreateProduct(product dto.Product) (dto.Product, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
