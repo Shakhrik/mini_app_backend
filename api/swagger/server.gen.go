@@ -23,7 +23,7 @@ import (
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Create a new product
-	// (POST /api/v1/products)
+	// (POST /product)
 	CreateProduct(c *gin.Context)
 }
 
@@ -76,7 +76,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 		ErrorHandler:       errorHandler,
 	}
 
-	router.POST(options.BaseURL+"/api/v1/products", wrapper.CreateProduct)
+	router.POST(options.BaseURL+"/product", wrapper.CreateProduct)
 }
 
 type CreateProductRequestObject struct {
@@ -99,7 +99,7 @@ func (response CreateProduct201JSONResponse) VisitCreateProductResponse(w http.R
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Create a new product
-	// (POST /api/v1/products)
+	// (POST /product)
 	CreateProduct(ctx context.Context, request CreateProductRequestObject) (CreateProductResponseObject, error)
 }
 
@@ -151,13 +151,13 @@ func (sh *strictHandler) CreateProduct(ctx *gin.Context) {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/6xSwW7UMBD9lWjgGNVZQKjyDThVQqLiWvXg2rNdV4nHHU+KVqv8Oxo7G6D0uJcomud5",
-	"8968OYGnKVPCJAXsCYo/4OTq7y1TmL38xOcZi2glM2VkiVjxGPS7J56cgIWY5PMn6IHRhR9pPIIVnrEH",
-	"OWZsMD4iw9JDchNq64oU4ZgeFcgcPf5Duh/JCWwkaZ4elGPRMc9zZAxg7xrhuf1+e00PT+hFiTcrJVMq",
-	"eDEvy3+ztBTTnqq/KKNi6/Tuy+0N9PCCXCIlsLC7Gq4GlUcZk8sRLHyspR6yk0MVZlyO5mVncuOotUwt",
-	"DjXgJFK6CWDhG6MTXGdBWxAW+UrhqI89JcFU+1zOY/S10zwVlXLOXf/eM+7Bwjvz5zDMehXm1UlUtwGL",
-	"55ileTp7Fep8FQR/R6VbrNm1HKqbD8Pu8vrWnN8Q2NYUanZlnibHx63auS7hr27ddesuyJoY2LvTK6bv",
-	"5N140Cx6mHkECweRbI0Zz4C9Hq4HWO6X3wEAAP//H6X4rGYDAAA=",
+	"H4sIAAAAAAAC/6xSwW7bMAz9FYPb0aicbRgK3badCgxYsWuRgyoziQpbVCm6QxD43wdKtrd1PeZiGHzi",
+	"43t8vICnMVHEKBnsBbI/4ejK7z1TP3n5ic8TZtFKYkrIErDgodfvgXh0AhZClM+foAVG1/+Iwxms8IQt",
+	"yDlhhfGIDHML0Y2orQuShUM8KpA4ePyH9DCQE9hI4jQ+KsesY56nwNiDfaiEa/t+e02PT+hFiTcrOVHM",
+	"eDUv83+ztBTigYq/IINiy/Tmy/0dtPCCnANFsLC76W46lUcJo0sBLHwspRaSk1MRZlJtLpKpxqDCnQSK",
+	"dz1Y+MboBJcZUBeDWb5Sf9bHnqJgLH0upSH40mmeskpY89a/94wHsPDO/DkIs1yDeXUKxWWP2XNIUr2s",
+	"HoUaXwTB3xHp9kpmdf/F2Ydud319S75vCKxr6ktmeRpHx+et2rgm4q8mbTsUd8x6WGtlXwgzsoYH9uHy",
+	"ivw7eTecNJ4WJh7AwkkkWWOGFbC33W1nXArmZQfzfv4dAAD//+gL7zB4AwAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

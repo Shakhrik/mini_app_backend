@@ -20,7 +20,6 @@ func NewServer(service *service.Service) *http.Server {
 	if err != nil {
 		return nil
 	}
-	sw.Servers = nil // Optionally remove servers from the spec
 
 	r.GET("/swagger.json", func(c *gin.Context) {
 		c.JSON(http.StatusOK, sw)
@@ -31,7 +30,9 @@ func NewServer(service *service.Service) *http.Server {
 
 	r.Use(middleware.OapiRequestValidator(sw))
 	h := handler.NewHandler(service)
-	swagger.RegisterHandlers(r, h)
+	swagger.RegisterHandlersWithOptions(r, h, swagger.GinServerOptions{
+		BaseURL: "api/v1",
+	})
 
 	return &http.Server{
 		Handler: r,
