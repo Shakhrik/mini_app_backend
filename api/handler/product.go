@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/Shakhrik/mini_app_backend/api"
+	model "github.com/Shakhrik/mini_app_backend/api/swagger"
 	"github.com/Shakhrik/mini_app_backend/dto"
 	"github.com/Shakhrik/mini_app_backend/service"
 	"github.com/gin-gonic/gin"
@@ -25,7 +25,7 @@ func (h productHandler) CreateProduct(c *gin.Context) {
 	// 	ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	// 	return
 	// }
-	req := api.ProductRequest{}
+	req := model.ProductRequest{}
 
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, "bad request")
@@ -41,7 +41,7 @@ func (h productHandler) CreateProduct(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, "internal server error")
 	}
-	c.JSON(http.StatusCreated, api.CreateProduct201JSONResponse{
+	c.JSON(http.StatusCreated, model.CreateProduct201JSONResponse{
 		Id: &p.Id,
 	})
 }

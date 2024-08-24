@@ -1,0 +1,4 @@
+package: swagger
+output: api/swagger/models.gen.go
+generate:
+  models: true

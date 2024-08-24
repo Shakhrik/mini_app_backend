@@ -1,7 +1,6 @@
-package: api
-output: api/server.gen.go
+package: swagger
+output: api/swagger/server.gen.go
 generate:
-  models: true
   gin-server: true
   embedded-spec: true
   strict-server: true
