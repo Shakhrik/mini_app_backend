@@ -1,6 +1,7 @@
 # Notes
 
 - Swagger url: `<host>/swagger/index.html`
+- To generate code by swagger: `make swag_run`
 - Docker postgres image setup for local run:
 
   ```

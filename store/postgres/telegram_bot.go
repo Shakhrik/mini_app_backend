@@ -35,7 +35,7 @@ func (t *telegramBotRepo) Get(ctx context.Context, id string) (*sdto.TelegramBot
 	FROM telegram_bot
 	WHERE id = $1
 	`
-	if err := t.db.GetContext(ctx, &res, query); err != nil {
+	if err := t.db.GetContext(ctx, &res, query, id); err != nil {
 		return nil, err
 	}
 	return &res, nil

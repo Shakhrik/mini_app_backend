@@ -6,6 +6,7 @@ import (
 
 	"github.com/Shakhrik/mini_app_backend/api/handler"
 	"github.com/Shakhrik/mini_app_backend/api/swagger"
+	"github.com/Shakhrik/mini_app_backend/pkg/logger"
 	"github.com/Shakhrik/mini_app_backend/service"
 	"github.com/gin-gonic/gin"
 	middleware "github.com/oapi-codegen/gin-middleware"
@@ -13,7 +14,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func NewServer(service *service.Service) *http.Server {
+func NewServer(service *service.Service, logger logger.Logger) *http.Server {
 	r := gin.Default()
 
 	sw, err := swagger.GetSwagger()
@@ -29,7 +30,7 @@ func NewServer(service *service.Service) *http.Server {
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
 	r.Use(middleware.OapiRequestValidator(sw))
-	h := handler.NewHandler(service)
+	h := handler.NewHandler(service, logger)
 	swagger.RegisterHandlersWithOptions(r, h, swagger.GinServerOptions{
 		BaseURL: "api/v1",
 	})

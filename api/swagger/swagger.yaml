@@ -47,6 +47,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IDResponse'
+    delete:
+      tags:
+        - telegram-bot
+      summary: Delete a telegram bot by ID
+      operationId: deleteTelegramBot
+      parameters:
+        - name: id
+          in: query
+          description: ID of the telegram bot to delete
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: Telegram bot not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /telegram-bot/{id}:
+    get:
+      tags:
+        - telegram-bot
+      summary: Get a telegram bot by ID
+      operationId: getTelegramBot
+      parameters:
+        - name: id
+          in: path
+          description: ID of the telegram bot to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Telegram bot found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelegramBot'
+        '404':
+          description: Telegram bot not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
   schemas:
@@ -86,3 +133,24 @@ components:
       required:
         - name
         - token
+
+    TelegramBot:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        token:
+          type: string
+        description:
+          type: string
+        image_url:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Resource not found"

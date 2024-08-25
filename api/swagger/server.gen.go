@@ -17,6 +17,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gin-gonic/gin"
+	"github.com/oapi-codegen/runtime"
 	strictgin "github.com/oapi-codegen/runtime/strictmiddleware/gin"
 )
 
@@ -25,9 +26,15 @@ type ServerInterface interface {
 	// Create a new product
 	// (POST /product)
 	CreateProduct(c *gin.Context)
+	// Delete a telegram bot by ID
+	// (DELETE /telegram-bot)
+	DeleteTelegramBot(c *gin.Context, params DeleteTelegramBotParams)
 	// Create a telegram bot
 	// (POST /telegram-bot)
 	CreateTelegramBot(c *gin.Context)
+	// Get a telegram bot by ID
+	// (GET /telegram-bot/{id})
+	GetTelegramBot(c *gin.Context, id string)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -52,6 +59,39 @@ func (siw *ServerInterfaceWrapper) CreateProduct(c *gin.Context) {
 	siw.Handler.CreateProduct(c)
 }
 
+// DeleteTelegramBot operation middleware
+func (siw *ServerInterfaceWrapper) DeleteTelegramBot(c *gin.Context) {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteTelegramBotParams
+
+	// ------------- Required query parameter "id" -------------
+
+	if paramValue := c.Query("id"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandler(c, fmt.Errorf("Query argument id is required, but not found"), http.StatusBadRequest)
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "id", c.Request.URL.Query(), &params.Id)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteTelegramBot(c, params)
+}
+
 // CreateTelegramBot operation middleware
 func (siw *ServerInterfaceWrapper) CreateTelegramBot(c *gin.Context) {
 
@@ -63,6 +103,30 @@ func (siw *ServerInterfaceWrapper) CreateTelegramBot(c *gin.Context) {
 	}
 
 	siw.Handler.CreateTelegramBot(c)
+}
+
+// GetTelegramBot operation middleware
+func (siw *ServerInterfaceWrapper) GetTelegramBot(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetTelegramBot(c, id)
 }
 
 // GinServerOptions provides options for the Gin server.
@@ -93,7 +157,9 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	}
 
 	router.POST(options.BaseURL+"/product", wrapper.CreateProduct)
+	router.DELETE(options.BaseURL+"/telegram-bot", wrapper.DeleteTelegramBot)
 	router.POST(options.BaseURL+"/telegram-bot", wrapper.CreateTelegramBot)
+	router.GET(options.BaseURL+"/telegram-bot/:id", wrapper.GetTelegramBot)
 }
 
 type CreateProductRequestObject struct {
@@ -109,6 +175,31 @@ type CreateProduct201JSONResponse IDResponse
 func (response CreateProduct201JSONResponse) VisitCreateProductResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteTelegramBotRequestObject struct {
+	Params DeleteTelegramBotParams
+}
+
+type DeleteTelegramBotResponseObject interface {
+	VisitDeleteTelegramBotResponse(w http.ResponseWriter) error
+}
+
+type DeleteTelegramBot204Response struct {
+}
+
+func (response DeleteTelegramBot204Response) VisitDeleteTelegramBotResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteTelegramBot404JSONResponse ErrorResponse
+
+func (response DeleteTelegramBot404JSONResponse) VisitDeleteTelegramBotResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -130,14 +221,46 @@ func (response CreateTelegramBot201JSONResponse) VisitCreateTelegramBotResponse(
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetTelegramBotRequestObject struct {
+	Id string `json:"id"`
+}
+
+type GetTelegramBotResponseObject interface {
+	VisitGetTelegramBotResponse(w http.ResponseWriter) error
+}
+
+type GetTelegramBot200JSONResponse TelegramBot
+
+func (response GetTelegramBot200JSONResponse) VisitGetTelegramBotResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetTelegramBot404JSONResponse ErrorResponse
+
+func (response GetTelegramBot404JSONResponse) VisitGetTelegramBotResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Create a new product
 	// (POST /product)
 	CreateProduct(ctx context.Context, request CreateProductRequestObject) (CreateProductResponseObject, error)
+	// Delete a telegram bot by ID
+	// (DELETE /telegram-bot)
+	DeleteTelegramBot(ctx context.Context, request DeleteTelegramBotRequestObject) (DeleteTelegramBotResponseObject, error)
 	// Create a telegram bot
 	// (POST /telegram-bot)
 	CreateTelegramBot(ctx context.Context, request CreateTelegramBotRequestObject) (CreateTelegramBotResponseObject, error)
+	// Get a telegram bot by ID
+	// (GET /telegram-bot/{id})
+	GetTelegramBot(ctx context.Context, request GetTelegramBotRequestObject) (GetTelegramBotResponseObject, error)
 }
 
 type StrictHandlerFunc = strictgin.StrictGinHandlerFunc
@@ -185,6 +308,33 @@ func (sh *strictHandler) CreateProduct(ctx *gin.Context) {
 	}
 }
 
+// DeleteTelegramBot operation middleware
+func (sh *strictHandler) DeleteTelegramBot(ctx *gin.Context, params DeleteTelegramBotParams) {
+	var request DeleteTelegramBotRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteTelegramBot(ctx, request.(DeleteTelegramBotRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteTelegramBot")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DeleteTelegramBotResponseObject); ok {
+		if err := validResponse.VisitDeleteTelegramBotResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // CreateTelegramBot operation middleware
 func (sh *strictHandler) CreateTelegramBot(ctx *gin.Context) {
 	var request CreateTelegramBotRequestObject
@@ -218,18 +368,48 @@ func (sh *strictHandler) CreateTelegramBot(ctx *gin.Context) {
 	}
 }
 
+// GetTelegramBot operation middleware
+func (sh *strictHandler) GetTelegramBot(ctx *gin.Context, id string) {
+	var request GetTelegramBotRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetTelegramBot(ctx, request.(GetTelegramBotRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetTelegramBot")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetTelegramBotResponseObject); ok {
+		if err := validResponse.VisitGetTelegramBotResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9RUTY/TPBD+K9G87zGsU0Bo5RsLl0pIrFbcVhVynWnqJfF4x5NF1Sr/HdlpQruk4gIH",
-	"LlVqzzx+PsZ+BktdII9eIuhniHaPncmf6493GAP5iOlfYArI4jDvuTr9yiEgaIjCzjcwDOW0QtsHtAJD",
-	"CbdMdW/lDh97jHIJaEfcGQENzsu7t1ACo6k/+/YAWrjHGdd5wQY5AXvT4QKHEgI7i2egu5aMwAzi+26b",
-	"MIZ0zGPvGGvQ9yPg1L5ZkPIFW2zYdDd0WU6N0bIL4sgvknOdafBrz+3i7kVNQt/QLzu+IGGs/lVCKnd+",
-	"RxnISZv2jvkU72/XUMITcszUYXVVXVXpaAroTXCg4U1eKiEY2WexKozN2QYa7UhmmCR/XYOGD4xG8HgG",
-	"jGQxyg3Vh1RsyQv63GdCaJ3Nneohju6Ns5i+/mfcgYb/1M9hVcdJVS8mLKs8i2HWKFTYTAhObUsDln0c",
-	"Zz0re12t/hi/k2u0wG10qM5Rxr7rDB/m1cIUHr8XYbZPTBNTztPKJnUpOc7lqy39NoqTGf5LcSzckgXZ",
-	"U1WxnYn8A2nIOespjrMANhk2Iqe7BPr+xZsAn8iadp8iKiG/A7AXCVqpdtrQ19V1pUxw6mkFw2b4EQAA",
-	"//82e87YowUAAA==",
+	"H4sIAAAAAAAC/9RV0WvbPhD+V8T9fo9enW5lFL+tzSiBsZXStxGGYl8cdbakns7ZQvH/PiQ7rp04Swcp",
+	"bC8hnHR3333fffITpKa0RqNmB8kTuHSFpQx/PxIZukNnjXboA5aMRWKF4bhE52QeDvCnLG2BkMAdOlNR",
+	"ikIbFktT6Qwi4I31Z45J6RzquouYxQOmDHUEs+nhRirzvy8ocksmq1K+w8cKHR8qtDRUSoYElOb3FxAB",
+	"ocy+6GIDCVOFXV2lGXMkX1jLEkcwRGBJpTgouiyM5OeZdVUufI3at3msFGEGydem4DZ9PjLKPRaYkyyv",
+	"zMgcGbqUlGVl9CiqUcIiUKXM8VtFxejpwRnZfEf9QgV6sA+qcBT9yWGOMN/c3mfeX1d6aUIhxWGn27US",
+	"H25nEMEayQXocH42OZv41saillZBAu9CKAIreRWGjW2THGgwDR2eDOnHn2WQwDWhZGx7QAMWHV+ZbOMv",
+	"p0Yz6pAnrS1UGjLjB9ew19jV//ufcAkJ/Bc/+zluzRzvGCNMOZChm5GNSAMg6NPmfRF4bCwaJns7OT8Z",
+	"vp77R7A1DGVBSleVpaRNFxVSaPwhbEcfy9x5nbeRuc+Kud3LN4vGTxkWyLgvxjTE++bzWpIskZF83Z31",
+	"hdlUmKXgFYptC7Ewgca2hV8nSOCxQtrAdn29Q3f5jXpc7a7wfI/7iz0nwWcjrlsx6ggumisnkWf4IRhR",
+	"6L4/+/PLPxSs4VbIIVOLjZhNe7oNlJr7J/Y3rhkK9RrOGXnQjsz/7xiHh6gPKLBrn/hJZbXHleOILjfI",
+	"J3EPIZPCdecf/6Ce0D6T11iQo85oXfE3mvMG+Q+dGfKR1uPKfjKpLFbeuhGETzmsmG0Sx8X2ILmcXE5i",
+	"aVW8Pod6Xv8KAAD//5flhOSJCgAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

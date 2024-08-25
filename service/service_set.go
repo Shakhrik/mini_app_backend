@@ -5,6 +5,7 @@ import (
 
 	"github.com/Shakhrik/mini_app_backend/dto"
 	srdto "github.com/Shakhrik/mini_app_backend/dto/service"
+	stdto "github.com/Shakhrik/mini_app_backend/dto/store"
 	"github.com/Shakhrik/mini_app_backend/store"
 )
 
@@ -26,4 +27,6 @@ type ProductI interface {
 
 type TelegramBotI interface {
 	Create(ctx context.Context, params *srdto.TelegramBotCreateParams) (string, error)
+	Delete(ctx context.Context, id string) error
+	Get(ctx context.Context, id string) (*stdto.TelegramBot, error)
 }

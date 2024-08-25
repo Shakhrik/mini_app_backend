@@ -40,7 +40,7 @@ func main() {
 
 	service := service.NewService(store)
 
-	server := api.NewServer(service)
+	server := api.NewServer(service, log)
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatal("error while listening: %v", logger.Error(err))
 	}
