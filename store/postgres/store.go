@@ -1,9 +1,13 @@
 package postgres
 
-import "github.com/Shakhrik/mini_app_backend/store"
+import (
+	"github.com/Shakhrik/mini_app_backend/store"
+	"github.com/jmoiron/sqlx"
+)
 
-func NewRepository(db string) *store.Repository {
+func NewRepository(db *sqlx.DB) *store.Repository {
 	return &store.Repository{
-		Product: newProductRepo(db),
+		Product:     newProductRepo(db),
+		TelegramBot: newTelegramBotRepo(db),
 	}
 }

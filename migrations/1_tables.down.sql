@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS shop;
+DROP TABLE IF EXISTS telegram_bot;

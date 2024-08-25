@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/Shakhrik/mini_app_backend/dto"
+	"github.com/jmoiron/sqlx"
 )
 
 var products = make(map[int64]dto.Product)
@@ -11,10 +12,10 @@ var productIDCounter int64 = 1
 var mu sync.Mutex
 
 type productRepo struct {
-	db string
+	db *sqlx.DB
 }
 
-func newProductRepo(db string) *productRepo {
+func newProductRepo(db *sqlx.DB) *productRepo {
 	return &productRepo{db: db}
 }
 

@@ -25,6 +25,9 @@ type ServerInterface interface {
 	// Create a new product
 	// (POST /product)
 	CreateProduct(c *gin.Context)
+	// Create a telegram bot
+	// (POST /telegram-bot)
+	CreateTelegramBot(c *gin.Context)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -47,6 +50,19 @@ func (siw *ServerInterfaceWrapper) CreateProduct(c *gin.Context) {
 	}
 
 	siw.Handler.CreateProduct(c)
+}
+
+// CreateTelegramBot operation middleware
+func (siw *ServerInterfaceWrapper) CreateTelegramBot(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateTelegramBot(c)
 }
 
 // GinServerOptions provides options for the Gin server.
@@ -77,6 +93,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	}
 
 	router.POST(options.BaseURL+"/product", wrapper.CreateProduct)
+	router.POST(options.BaseURL+"/telegram-bot", wrapper.CreateTelegramBot)
 }
 
 type CreateProductRequestObject struct {
@@ -87,9 +104,26 @@ type CreateProductResponseObject interface {
 	VisitCreateProductResponse(w http.ResponseWriter) error
 }
 
-type CreateProduct201JSONResponse ProductResponse
+type CreateProduct201JSONResponse IDResponse
 
 func (response CreateProduct201JSONResponse) VisitCreateProductResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateTelegramBotRequestObject struct {
+	Body *CreateTelegramBotJSONRequestBody
+}
+
+type CreateTelegramBotResponseObject interface {
+	VisitCreateTelegramBotResponse(w http.ResponseWriter) error
+}
+
+type CreateTelegramBot201JSONResponse IDResponse
+
+func (response CreateTelegramBot201JSONResponse) VisitCreateTelegramBotResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(201)
 
@@ -101,6 +135,9 @@ type StrictServerInterface interface {
 	// Create a new product
 	// (POST /product)
 	CreateProduct(ctx context.Context, request CreateProductRequestObject) (CreateProductResponseObject, error)
+	// Create a telegram bot
+	// (POST /telegram-bot)
+	CreateTelegramBot(ctx context.Context, request CreateTelegramBotRequestObject) (CreateTelegramBotResponseObject, error)
 }
 
 type StrictHandlerFunc = strictgin.StrictGinHandlerFunc
@@ -148,16 +185,51 @@ func (sh *strictHandler) CreateProduct(ctx *gin.Context) {
 	}
 }
 
+// CreateTelegramBot operation middleware
+func (sh *strictHandler) CreateTelegramBot(ctx *gin.Context) {
+	var request CreateTelegramBotRequestObject
+
+	var body CreateTelegramBotJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateTelegramBot(ctx, request.(CreateTelegramBotRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateTelegramBot")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateTelegramBotResponseObject); ok {
+		if err := validResponse.VisitCreateTelegramBotResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/6xSwW7bMAz9FYPb0aicbRgK3badCgxYsWuRgyoziQpbVCm6QxD43wdKtrd1PeZiGHzi",
-	"43t8vICnMVHEKBnsBbI/4ejK7z1TP3n5ic8TZtFKYkrIErDgodfvgXh0AhZClM+foAVG1/+Iwxms8IQt",
-	"yDlhhfGIDHML0Y2orQuShUM8KpA4ePyH9DCQE9hI4jQ+KsesY56nwNiDfaiEa/t+e02PT+hFiTcrOVHM",
-	"eDUv83+ztBTigYq/IINiy/Tmy/0dtPCCnANFsLC76W46lUcJo0sBLHwspRaSk1MRZlJtLpKpxqDCnQSK",
-	"dz1Y+MboBJcZUBeDWb5Sf9bHnqJgLH0upSH40mmeskpY89a/94wHsPDO/DkIs1yDeXUKxWWP2XNIUr2s",
-	"HoUaXwTB3xHp9kpmdf/F2Ydud319S75vCKxr6ktmeRpHx+et2rgm4q8mbTsUd8x6WGtlXwgzsoYH9uHy",
-	"ivw7eTecNJ4WJh7AwkkkWWOGFbC33W1nXArmZQfzfv4dAAD//+gL7zB4AwAA",
+	"H4sIAAAAAAAC/9RUTY/TPBD+K9G87zGsU0Bo5RsLl0pIrFbcVhVynWnqJfF4x5NF1Sr/HdlpQruk4gIH",
+	"LlVqzzx+PsZ+BktdII9eIuhniHaPncmf6493GAP5iOlfYArI4jDvuTr9yiEgaIjCzjcwDOW0QtsHtAJD",
+	"CbdMdW/lDh97jHIJaEfcGQENzsu7t1ACo6k/+/YAWrjHGdd5wQY5AXvT4QKHEgI7i2egu5aMwAzi+26b",
+	"MIZ0zGPvGGvQ9yPg1L5ZkPIFW2zYdDd0WU6N0bIL4sgvknOdafBrz+3i7kVNQt/QLzu+IGGs/lVCKnd+",
+	"RxnISZv2jvkU72/XUMITcszUYXVVXVXpaAroTXCg4U1eKiEY2WexKozN2QYa7UhmmCR/XYOGD4xG8HgG",
+	"jGQxyg3Vh1RsyQv63GdCaJ3Nneohju6Ns5i+/mfcgYb/1M9hVcdJVS8mLKs8i2HWKFTYTAhObUsDln0c",
+	"Zz0re12t/hi/k2u0wG10qM5Rxr7rDB/m1cIUHr8XYbZPTBNTztPKJnUpOc7lqy39NoqTGf5LcSzckgXZ",
+	"U1WxnYn8A2nIOespjrMANhk2Iqe7BPr+xZsAn8iadp8iKiG/A7AXCVqpdtrQ19V1pUxw6mkFw2b4EQAA",
+	"//82e87YowUAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

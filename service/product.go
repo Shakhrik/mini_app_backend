@@ -6,16 +6,16 @@ import (
 )
 
 type product struct {
-	productRepo store.ProductRepo
+	productStore store.ProductRepo
 }
 
 func newProduct(productRepo store.ProductRepo) *product {
 	return &product{
-		productRepo: productRepo,
+		productStore: productRepo,
 	}
 }
 func (p *product) CreateProduct(product dto.Product) (dto.Product, error) {
-	createdProduct, err := p.productRepo.CreateProduct(product)
+	createdProduct, err := p.productStore.CreateProduct(product)
 	if err != nil {
 		return dto.Product{}, err
 	}
